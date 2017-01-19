@@ -5,19 +5,19 @@ Infrastructure Monitoring with Rsyslog, Kafka, Zookeeper and the ELK Stack
 
 [1. Overview](#overview)
 
-[2. Client](#)
+[2. Client](#client)
 
-[3. Rsyslog server](#)
+[3. Rsyslog server](#rsyslog)
 
-[4. Logstash shipper](#)
+[4. Logstash shipper](#logstash_shipper)
 
-[5. Kafka - Zookeeper](#)
+[5. Kafka - Zookeeper](#kafka_zookeeper)
 
-[6. Logstash indexer](#)
+[6. Logstash indexer](#logstash_indexer)
 
-[7. Elasticsearch](#)
+[7. Elasticsearch](#elasticsearch)
 
-[8. Kibana](#)
+[8. Kibana](#kibana)
 
 
 <a name="overview"></a>
@@ -25,9 +25,11 @@ Infrastructure Monitoring with Rsyslog, Kafka, Zookeeper and the ELK Stack
 
 
 Mô hình lab: 
+
 <img src="https://github.com/locvx1234/Mornitoring/blob/master/image/topo.png?raw=true">
 
 OS : Ubuntu 14.04 
+
 RAM : 2GB (riêng Elasticsearch 4GB)
 
 
@@ -37,9 +39,9 @@ RAM : 2GB (riêng Elasticsearch 4GB)
 Để monitor hệ thống, ta phải cấu hình để các Client server đẩy log về Rsyslog server. Trên mỗi Client server, ta sử dụng Rsyslog để đẩy syslog về Rsyslog Server.
 
 
-Sửa file 50-default.conf hoặc tạo một file mới với đuôi .conf trong /etc/rsyslog.d và đặt dòng xác định ip và port rsyslog server :
+Sửa file `50-default.conf` hoặc tạo một file mới với đuôi `.conf` trong `/etc/rsyslog.d` và đặt dòng xác định ip và port Rsyslog server :
 	
-	$ vi /etc/rsyslog.d/50-default.conf
+	# vi /etc/rsyslog.d/50-default.conf
 	
 	*.*   @ip-rsyslog-server:514
 	
@@ -47,26 +49,17 @@ Dấu `@` là quy ước sử dụng UDP
 
 Sau đó restart lại rsyslog:
 
-	$ service rsyslog restart 
+	# service rsyslog restart 
 
 Một số ứng dụng mặc định không đẩy log vào syslog, ta phải cấu hình riêng có các ứng dụng đó.	
 
-#### Proxy
- 
-Mở file cấu hình proxy và tìm `syslog` 
-
-	$ vi 
-	
-Để tìm kiếm trong vi ta dùng `/syslog` và `n` để tìm các từ tiếp theo.
-
-Thêm dòng xác định nơi lưu log proxy :
-
+// TODO : Bổ sung thêm từng service 
 	
 <a name="rsyslog"></a>
 ## 3. Rsyslog server (192.168.169.200)
 Mặc định, rsyslog đã được cài sẵn trên linux.
 
-Uncomment 2 dòng như sau để rsyslog lắng nghe trên cổng 514 theo giao thức UDP
+Uncomment 2 dòng như sau để rsyslog lắng nghe trên port 514 theo giao thức UDP
 	
 	# provides UDP syslog reception
 	$ModLoad imudp
@@ -80,35 +73,38 @@ Thêm các dòng sau vào cuối để xác định vị trí lưu log
 
 Tạo folder chứa log
 
-	$ mkdir /data
-	$ mkdir /data/log
-	$ chown syslog.syslog /data/log
+	# mkdir /data
+	# mkdir /data/log
+	# chown syslog.syslog /data/log
 	
 Sau đó restart lại rsyslog:
 
-	$ service rsyslog restart 
+	# service rsyslog restart 
+
+Nếu cấu hình đúng, trong `/data/log` sẽ có log của các Client server đẩy về.
 
 <a name="logstash_shipper"></a>
 ## 4. Logstash shipper (192.168.169.200)
-Logstash chạy trên nền java nên ta phải cài java:
 
-	$ add-apt-repository -y ppa:webupd8team/java
-	$ apt-get update
-	$ apt-get -y install oracle-java8-installer
+Logstash chạy trên nền java nên phải cài đặt java:
+
+	# add-apt-repository -y ppa:webupd8team/java
+	# apt-get update
+	# apt-get -y install oracle-java8-installer
 
 Check version java
 	
-	$ java -version
+	# java -version
 	
 Cài Logstash từ source 
 
-	$ wget https://artifacts.elastic.co/downloads/logstash/logstash-5.1.2.tar.gz
-	$ tar -xzvf logstash-5.1.2.tar.gz
-	$ cd logstash-5.1.2
+	# wget https://artifacts.elastic.co/downloads/logstash/logstash-5.1.2.tar.gz
+	# tar -xzvf logstash-5.1.2.tar.gz
+	# cd logstash-5.1.2
 	
 Mở file startup 
 
-	$ vi config/startup.options 
+	# vi config/startup.options 
 	
 Đặt đường dẫn cho LOGSTASH_HOME, ví dụ
 	
@@ -146,25 +142,26 @@ Thông tin thêm về các plugin xem [tại đây](https://www.elastic.co/guide
 
 Chạy logstash sử dụng cấu hình vừa tạo
 
-	$ bin/logstash -f logstash_basic.conf 
+	# bin/logstash -f logstash_basic.conf 
 	
+<a name="kafka_zookeeper"></a>
 ## 5. Kafka - Zookeeper (192.168.169.201)
 Cài đặt Java  - như đã cài trên rsyslog-server
 
 Cài Kafka từ source 
 
-	$ wget http://www-eu.apache.org/dist/kafka/0.10.1.1/kafka_2.10-0.10.1.1.tgz
+	# wget http://www-eu.apache.org/dist/kafka/0.10.1.1/kafka_2.10-0.10.1.1.tgz
 	
 Link mirror http://www-us.apache.org/dist/kafka/0.10.1.1/kafka_2.10-0.10.1.1.tgz
 
 Giải nén
 
-	$ tar -xzvf kafka_2.10-0.10.1.1.tgz 
+	# tar -xzvf kafka_2.10-0.10.1.1.tgz 
 
 Cấu hình cho Kafka server
 
-	$ cd kafka_2.10-0.10.1.1
-	$ vi config/server.properties
+	# cd kafka_2.10-0.10.1.1
+	# vi config/server.properties
 	
 Uncomment 
 	
@@ -198,16 +195,64 @@ Test consumer
 
 	# bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
 	
-[See more ...](https://github.com/locvx1234/Zookeeper-kafka/blob/master/Kafka.md)
+[See more ...](https://github.com/locvx1234/Zookeeper-kafka)
 
+<a name="logstash_indexer"></a>
 ## 6. Logstash indexer (192.168.169.202)
 
 Cài đặt Java và Logstash như đã cài trên rsyslog-server
 
+File cấu hình của Logstash indexer, ta sẽ sử dụng 3 plugin : input, filter và output
 
+Ví dụ : 
+
+	input {
+		kafka {
+
+		bootstrap_servers => "192.168.169.201:9092"
+		topics => ["syslog"]
+		client_id => "syslog"
+		consumer_threads => 1
+		type => "syslog"
+		}
+	}
+
+	filter {
+		grok {
+			match => { "message" => "%{TIMESTAMP_ISO8601:timesend_shipper} %{IPORHOST:logsend} %{SYSLOGTIMESTAMP:timesend_client} %{IPORHOST:logsource} %{GREEDYDATA:message}"
+			}
+			overwrite => "message"
+		}
+	}
+
+	filter {
+		if [type] == "syslog" {
+			grok {
+				patterns_dir => [ "/root/logstash-5.1.2/extra_patterns" ]
+				match => { "message" => [ "%{PROG:logprogram} %{AUDIS_BASE} %{GREEDYDATA:message}" ] }
+				overwrite => "message"
+				add_tag => [ "audis_base_ok" ]
+			}
+		}
+	}
+
+	output {
+		if [type] == "syslog" {
+			elasticsearch {
+			hosts => [ "192.168.169.203:9200" ]
+			index => "syslog-%{+YYYY.MM.dd}"
+			}
+			stdout { codec => rubydebug }
+		}
+	}
+	
+Plugin input sẽ lấy log từ kafka qua filter (grok) để định dạng lại log và đưa ra output (elasticsearch)
+	
+	
+<a name="elasticsearch"></a>
 ## 7. Elasticsearch (192.168.169.203)
 
-Cài đặt Java như các server trên.
+Elasticsearch cũng cần cài đặt Java như Logstash.
 
 Cài đặt Elasticsearch từ gói deb:
 
@@ -245,7 +290,7 @@ Start service:
 
 	# service elasticsearch start
 
-
+<a name="kibana"></a>
 ## 8. Kibana (192.168.169.204)
 	
 Sử dụng gói `kibana-5.1.1-amd64.deb` để cài đặt. 
