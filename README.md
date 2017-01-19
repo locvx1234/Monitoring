@@ -4,12 +4,19 @@ Infrastructure Monitoring with Rsyslog, Kafka, Zookeeper and the ELK Stack
 ## Content
 
 [1. Overview](#overview)
+
 [2. Client](#)
+
 [3. Rsyslog server](#)
+
 [4. Logstash shipper](#)
+
 [5. Kafka - Zookeeper](#)
+
 [6. Logstash indexer](#)
+
 [7. Elasticsearch](#)
+
 [8. Kibana](#)
 
 
@@ -18,7 +25,11 @@ Infrastructure Monitoring with Rsyslog, Kafka, Zookeeper and the ELK Stack
 
 
 Mô hình lab: 
-<img src="">
+<img src="https://github.com/locvx1234/Mornitoring/blob/master/image/topo.png?raw=true">
+
+OS : Ubuntu 14.04 
+RAM : 2GB (riêng Elasticsearch 4GB)
+
 
 <a name="client"></a>
 ## 2. Client
@@ -165,27 +176,27 @@ Uncomment
 
 Khởi động Zookeeper server:
 
-	$ bin/zookeeper-server-start.sh config/zookeeper.properties
+	# bin/zookeeper-server-start.sh config/zookeeper.properties
 
 Khởi động Kafka server: 
 
-	$ bin/kafka-server-start.sh config/server.properties
+	# bin/kafka-server-start.sh config/server.properties
 	
 Tạo topic :
 
-	$ bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
+	# bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test
 	
 Để xem các topic đã có :
 
-	$ bin/kafka-topics.sh --list --zookeeper localhost:2181
+	# bin/kafka-topics.sh --list --zookeeper localhost:2181
 	
 Test producer 
 
-	$ bin/kafka-console-producer.sh --broker-list localhost:9092 --topic
+	# bin/kafka-console-producer.sh --broker-list localhost:9092 --topic
 
 Test consumer 
 
-	$ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
+	# bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning
 	
 [See more ...](https://github.com/locvx1234/Zookeeper-kafka/blob/master/Kafka.md)
 
@@ -196,12 +207,123 @@ Cài đặt Java và Logstash như đã cài trên rsyslog-server
 
 ## 7. Elasticsearch (192.168.169.203)
 
-	$ dpkg -i elasticsearch-5.1.1.deb
+Cài đặt Java như các server trên.
+
+Cài đặt Elasticsearch từ gói deb:
+
+	# dpkg -i elasticsearch-5.1.1.deb
+
+Cấu hình cho Elasticsearch:
+
+	# vi /etc/elasticsearch/elasticsearch.yml
 	
+Xác định một vài tham số: 
 
+	...
+	cluster.name: cluster-1
+	...
+	node.name: node-1
+	...
+	path.data: /data/elasticsearch
+	...
+	path.logs: /data/logs
+	...
+	network.host: 192.168.169.203
+	...
+	http.port: 9200
+
+Sau đó tạo các thư mục theo cấu hình vừa tạo:
 	
+	# mkdir /data
+	# cd /data/
+	# mkdir logs
+	# mkdir elasticsearch
+	# chown elasticsearch.elasticsearch logs
+	# chown elasticsearch.elasticsearch elasticsearch/
+
+Start service:
+
+	# service elasticsearch start
 
 
+## 8. Kibana (192.168.169.204)
+	
+Sử dụng gói `kibana-5.1.1-amd64.deb` để cài đặt. 
+
+	# dpkg -i path/to/file/kibana-5.1.1-amd64.deb
+
+Sửa file cấu hình 
+
+	# vi /etc/kibana/kibana.yml
+	
+Thiết lập một số tham số như sau: 
+
+	...
+	server.port: 5601
+	...
+	server.host: "192.168.169.204"
+	...
+	server.name: "Kibana"
+	...
+	elasticsearch.url: "http://192.168.169.203:9200"
+	...
+	kibana.index: ".kibana"
+
+Bật Kibana và start:
+
+	# update-rc.d kibana defaults 96 9
+	# service kibana start
+	
+Trước khi sử dụng Kibana, ta phải cài đặt một reverse proxy, Nginx
+	
+Cài đặt Nginx và Apache2-utils
+
+	# apt-get install nginx apache2-utils
+	
+Sử dụng htpasswd để tạo admin user, trong trường hợp này là "lockibana"
+
+	# htpasswd -c /etc/nginx/htpasswd.users lockibana
+
+Tài khoản này để đăng nhập trên giao diện web của Kibana
+
+Cấu hình Nginx default server block
+
+	$ sudo vi /etc/nginx/sites-available/default
+	
+Xóa nội dung file và thay thế bởi
+
+
+	server {
+        listen 80;
+
+        server_name Kibana;
+
+        auth_basic "Restricted Access";
+        auth_basic_user_file /etc/nginx/htpasswd.users;
+
+        location / {
+            proxy_pass http://192.168.169.204:5601;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;        
+        }
+    }
+
+`server_name` phải đúng servername ở cấu hình Kibana 
+
+Save và exit.
+
+Với cấu hình này, Nginx sẽ kết nối trực tiếp tới Kibana, lắng nghe trên `192.168.169.204:5601`. Ngoài ra Nginx sử dụng file `htpasswd.users` mà chúng ta tạo ra trước đó để xác thực cơ bản.
+
+Restart Nginx:
+
+	# service nginx restart	
+	
+	
+	
+	
 	
 	
 	
