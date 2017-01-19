@@ -86,6 +86,7 @@ Nếu cấu hình đúng, trong `/data/log` sẽ có log của các Client serve
 <a name="logstash_shipper"></a>
 ## 4. Logstash shipper (192.168.169.200)
 
+<a name="java"></a>
 Logstash chạy trên nền java nên phải cài đặt java:
 
 	# add-apt-repository -y ppa:webupd8team/java
@@ -146,7 +147,7 @@ Chạy logstash sử dụng cấu hình vừa tạo
 	
 <a name="kafka_zookeeper"></a>
 ## 5. Kafka - Zookeeper (192.168.169.201)
-Cài đặt Java  - như đã cài trên rsyslog-server
+Cài đặt [Java](#java) - như đã cài trên rsyslog-server
 
 Cài Kafka từ source 
 
@@ -200,7 +201,7 @@ Test consumer
 <a name="logstash_indexer"></a>
 ## 6. Logstash indexer (192.168.169.202)
 
-Cài đặt Java và Logstash như đã cài trên rsyslog-server
+Cài đặt [Java](#java) và Logstash như đã cài trên rsyslog-server
 
 File cấu hình của Logstash indexer, ta sẽ sử dụng 3 plugin : input, filter và output
 
@@ -252,7 +253,7 @@ Plugin input sẽ lấy log từ kafka qua filter (grok) để định dạng l�
 <a name="elasticsearch"></a>
 ## 7. Elasticsearch (192.168.169.203)
 
-Elasticsearch cũng cần cài đặt Java như Logstash.
+Elasticsearch cũng cần cài đặt [Java](#java) như Logstash.
 
 Cài đặt Elasticsearch từ gói deb:
 
@@ -367,7 +368,11 @@ Restart Nginx:
 	# service nginx restart	
 	
 	
-	
+Sử dụng trình duyệt truy cập vào địa chỉ Kibana server để theo dõi log:
+
+Giao diện Kibana:
+
+<img src="https://github.com/locvx1234/Mornitoring/blob/master/image/kibana.png?raw=true">
 	
 	
 	
