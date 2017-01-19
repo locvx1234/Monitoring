@@ -120,7 +120,7 @@ Ví dụ tạo 1 file tên là `logstash_basic.conf`
 	input {
 		file {
 			path => "/data/log/ubuntu/audispd.log"
-			type => "syslog"
+			type => "audispd"
 			start_position => "beginning"
 		}
 	}
@@ -251,7 +251,7 @@ Plugin input sẽ lấy log từ kafka qua filter (grok) để định dạng l�
 	
 `patterns_dir` gán vào địa chỉ file `extra_patterns` 
 
-// TO DO link giải thích cách viết pattern 	
+// TODO link giải thích cách viết pattern 	
 
 Chạy logstash sử dụng cấu hình vừa tạo
 
