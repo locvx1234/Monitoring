@@ -205,7 +205,7 @@ Cài đặt [Java](#java) và Logstash như đã cài trên rsyslog-server
 
 File cấu hình của Logstash indexer, ta sẽ sử dụng 3 plugin : input, filter và output
 
-Ví dụ : 
+Ví dụ file `logstash_basic.conf`: 
 
 	input {
 		kafka {
@@ -249,7 +249,14 @@ Ví dụ :
 	
 Plugin input sẽ lấy log từ kafka qua filter (grok) để định dạng lại log và đưa ra output (elasticsearch)
 	
-	
+`patterns_dir` gán vào địa chỉ file `extra_patterns` 
+
+// TO DO link giải thích cách viết pattern 	
+
+Chạy logstash sử dụng cấu hình vừa tạo
+
+	# bin/logstash -f logstash_basic.conf 
+
 <a name="elasticsearch"></a>
 ## 7. Elasticsearch (192.168.169.203)
 
