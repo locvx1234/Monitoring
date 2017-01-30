@@ -24,10 +24,14 @@ check_distro()
 
 install_java()
 {
-	echo "Installing Java 8 ..."
-	add-apt-repository -y ppa:webupd8team/java
-	apt-get update
-	apt-get -y install oracle-java8-installer
+	if test ! -f /usr/bin/java 2> /dev/null
+    then
+        echo "Installing Java 8 ..." 
+        add-apt-repository -y ppa:webupd8team/java
+        apt-get update
+        apt-get -y install oracle-java8-installer
+    fi
+
 }
 install_kafka()
 {
@@ -42,8 +46,8 @@ install_kafka()
 	sed -i 's/#listeners=PLAINTEXT:\/\/:9092/listeners=PLAINTEXT:\/\/:9092/g' config/server.properties
 	sed -i 's/#advertised.listeners=PLAINTEXT:\/\/your.host.name:9092/advertised.listeners=PLAINTEXT:\/\/'"$ip_add"':9092/g' config/server.properties
 
-	bin/zookeeper-server-start.sh config/zookeeper.properties
-#	bin/kafka-server-start.sh config/server.properties	
+	bin/zookeeper-server-start.sh config/zookeeper.properties &
+	bin/kafka-server-start.sh config/server.properties &
 }
 
 main()

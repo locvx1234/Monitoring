@@ -5,11 +5,7 @@ File `rsyslog_script` cấu hình cho rsyslog server nhận log theo UDP ở por
 
 
 ## Server 2:
-File 1: `kafka_script` download Kafka và khởi động Zookeeper server
-
-File 2: `kafka_2_script` khởi động Kafka server 
-
-Sau khi khởi động Zookeeper ở file 1, tạo một session khác và chạy file 2.
+File `kafka_script` download Kafka và khởi động Zookeeper server, Kafka server
 
 ## Server 3: 
 File `logstash_script` để cài đặt và cấu hình cho Logstash nhận input từ Kafka, đẩy log cho Elasticsearch.
