@@ -7,20 +7,18 @@ ip_add=$(ip addr show $1| grep -w "scope global" | awk {'print $2'} | awk -F"/" 
 
 check_permission()
 {
-	if [ $(id -u) -ne 0 ]
-	then 
-		echo "Permission denied! You need login as root ^^"
-		exit $1
-	fi
+	[ $(id -u) -eq 0 ] || { echo "$0: Only root may run this script."; echo "ERROR: Permission deny" >> /var/log/elk.log; exit 1; }
 }
 
 check_distro()
 {
 	os=$(lsb_release -is)
-	if [ $os != 'Ubuntu' ]
+	release=$(lsb_release -rs)
+    if [ $os != 'Ubuntu' ] && [ $release != '14.04' ] 
 	then
-		echo "Script available to Ubuntu !"
-	exit $1	
+		echo "Script available to Ubuntu 14.04!"
+		echo "ERROR: This OS is not compatible" >> /var/log/elk.log
+		exit 1	
 	fi
 }
 
@@ -36,16 +34,21 @@ install_kibana(){
 	
 	test -f $kibana.bka || cp $kibana $kibana.bka
 	
-	sed -i 's/#server.host: "localhost"/server.host: "'"$ip_add"'"/g' /etc/kibana/kibana.yml
-	sed -i 's/#server.name: "your-hostname"/server.name: "Kibana"/g' /etc/kibana/kibana.yml
-	sed -i 's/#kibana.index: ".kibana"/kibana.index: ".kibana"/g' /etc/kibana/kibana.yml
-	sed -i 's/#elasticsearch.url:/elasticsearch.url:/g' /etc/kibana/kibana.yml
+	sed -i 's/#server.host: "localhost"/server.host: "'"$ip_add"'"/g' $kibana
+	sed -i 's/#server.name: "your-hostname"/server.name: "Kibana"/g' $kibana
+	sed -i 's/#kibana.index: ".kibana"/kibana.index: ".kibana"/g' $kibana
+	sed -i 's/#elasticsearch.url:/elasticsearch.url:/g' $kibana
 	
 	echo -n "IP elasticsearch: "
 	read ip_elasticsearch
-	sed -i 's/localhost:9200/'"$ip_elasticsearch"':9200/g' /etc/kibana/kibana.yml
+	sed -i 's/localhost:9200/'"$ip_elasticsearch"':9200/g' $kibana
 	update-rc.d kibana defaults 96 9
 	service kibana restart
+	
+	# Check install
+	curl -s $ip_add:5601 > /dev/null
+    sleep 3
+    [ $? -eq 0 ] && echo "[Kibaba]: Successfully installed!!!" || { echo "Failed to install. Check log in /var/log/elk.log"; exit 1;}
 }
 install_nginx()
 {
@@ -76,8 +79,8 @@ install_nginx()
 	    }
 	}			
 EOF
-service nginx restart 
-echo "DONE!"
+	service nginx restart 
+	echo "DONE!"
 }
 
 main()
